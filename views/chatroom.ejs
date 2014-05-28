@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]> <html class="lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]> <html class="lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]> <html class="lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html lang="en"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>ChatMe.io - Connexion</title>
+        <link rel="stylesheet" href="css/style.css">
+
+        <style type="text/css">
+            .login {
+                width: 500px;
+            }
+            #message {
+                width: 350px;
+            }
+        </style>
+        <!--[if lt IE 9]><script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    </head>
+
+    <body>
+        <section class="container">
+
+            <div class="login-help">
+                <p>Bonjour <span id="username"><%= login %></span> !</p>
+            </div>
+
+            <div class="login">
+
+                <div id="chat_frame">
+
+                </div>
+
+                <div id="chat_frame_form">
+                    <form action="/" method="post" id="form_chat">
+                        <input type="text" name="message" id="message" placeholder="Votre message..." size="50" autofocus />
+                        <input type="submit" id="envoi_message" value="Envoyer" />
+                    </form>
+                </div>
+            </div>
+
+        </section>
+
+        <section class="about">
+            <p class="about-author">
+                &copy; 2012&ndash;2014 <a href="http://www.kevinmachado.com" target="_blank">Kévin MACHADO</a> -
+                <a href="http://www.cssflow.com/mit-license" target="_blank">MIT License</a><br>
+        </section>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+
+        <script>
+
+            var socket = io.connect('http://192.168.0.46:8080');
+            var pseudo = "";
+            $('#chat_frame_form').hide();
+            socket.emit('userconnection', "<%= token %>");
+
+            socket.on('message', function(msgjson) {
+                var objmsg = JSON.parse(msgjson);
+                putMessage(objmsg.pseudo, objmsg.text, objmsg.date);
+            });
+
+            socket.on('json_old_message', function(json) {
+                obj = JSON.parse(json);
+                for(var i = 5; i>=0; i--) {
+                    eval("putOldMessage(obj.message"+i+".pseudo, obj.message"+i+".text, obj.message"+i+".date);");
+                }
+            });
+
+            socket.on('accept_connection', function(accept, _pseudo) {
+                if (accept === true) {
+                    $('#chat_frame_form').show();
+                    pseudo = _pseudo;
+                    getOldMessage();
+                }
+                else
+                    alert('erreur');
+            });
+
+            socket.on('user_join_us', function(username, date) {
+                $('#chat_frame').append('<p><span id="hour">' + dateString(date) + '</span> <strong><b>' + username + '</b></strong> à rejoint la session !</p>');
+            });
+
+            function putMessage(_pseudo, message, date) {
+                if (_pseudo === pseudo)
+                    _pseudo = "Moi";
+                $('#chat_frame').append('<p ' + (_pseudo === "Moi" ? 'id="own_message"' : '') + '><span id="hour">' + dateString(date) + '</span> <strong><b>' + _pseudo + '</b></strong> : ' + message + '</p>');
+                scrollToBottom();
+            }
+
+            function putOldMessage(_pseudo, message, date) {
+                if (_pseudo === pseudo)
+                    _pseudo = "Moi";
+                $('#chat_frame').append('<p id="old_message"><span id="hour">' + dateString(date) + '</span> <strong><b>' + _pseudo + '</b></strong> : ' + message + '</p>');
+                scrollToBottom();
+            }
+
+            function getOldMessage() {
+                socket.emit('needOldMessage');
+            }
+
+            function dateString(date) {
+                var d = new Date(date);
+                var h = d.getHours();
+                var m = d.getMinutes();
+                var s = d.getSeconds();
+                return h + ":" + (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+            }
+
+            $('#form_chat').submit(function() {
+                var message = $('#message').val();
+                socket.emit('message', message);
+                $('#message').val('').focus();
+                return false;
+            });
+
+            function scrollToBottom() {
+                var scrollview = $('#chat_frame');
+                var height = scrollview[0].scrollHeight;
+                scrollview.scrollTop(height);
+            }
+
+        </script>
+
+    </body>
+</html>

@@ -1,0 +1,11 @@
+{
+    "name": "ChatWithMe",
+    "version": "0.1.0",
+    "dependencies": {
+        "express": "~3",
+        "socket.io": "~0.9",
+        "ent": "~0.1.0"
+    },
+    "author": "thedjnivek <machadokevin.dev@gmail.com>",
+    "description": "ChatMe.io, dialoguez en temps réel avec socket.io"
+}

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]> <html class="lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]> <html class="lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]> <html class="lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html lang="en"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>ChatMe.io - Connexion</title>
+        <link rel="stylesheet" href="css/style.css">
+        <!--[if lt IE 9]><script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    </head>
+
+    <body>
+        <section class="container">
+            <div class="login">
+                <h1>ChatMe.io - Connexion</h1>
+                <form method="post" id="login_form" action="/">
+                    <p><input type="text" name="login" value="" id="username" placeholder="Nom d'utilisateur"></p>
+                    <p><input type="password" name="password" value="" id="password" placeholder="Mot de passe"></p>
+                    <p><input type="email" name="mail" value="" id="mail" placeholder="Adresse mail"></p>
+                    <p class="submit"><input type="submit" name="commit" value="Connexion"> <input id="inscription" type="button" name="commit" value="Inscription"></p>
+                </form>
+            </div>
+
+            <div class="login-help" id="bottom_news">
+                <p>Mot de passe oublié ? <a href="chatroom.html">Appuyez ici pour le réinitialiser</a>.</p>
+            </div>
+        </section>
+
+        <section class="about">
+            <p class="about-author">
+                &copy; 2012&ndash;2014 <a href="http://www.kevinmachado.com" target="_blank">Kévin MACHADO</a> -
+                <a href="http://www.cssflow.com/mit-license" target="_blank">MIT License</a><br>
+        </section>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+        <script>
+            var socket = io.connect('http://192.168.0.46:8080');
+            $('#mail').hide();
+
+            $('#login_form').submit(function() {
+                var login = $('#username').val();
+                var password = $('#password').val();
+                socket.emit('login', login, password); // Envoi les identifiants au serveur
+                return false;
+            });
+
+            $('#inscription').click(function() {
+                if ($('#mail').val() === "") {
+                    $('#mail').show();
+                    $('#mail').focus();
+                } else {
+                    var login = $('#username').val();
+                    var password = $('#password').val();
+                    var mail = $('#mail').val();
+                    socket.emit('newaccount', login, password, mail);
+                }
+            });
+
+            socket.on('newaccount_return', function(success) {
+                if (success)
+                    $('#bottom_news').prepend('<p style="font-size:16px">Votre compte à été créé avec succès !</p>');
+            });
+
+            socket.on('login_return', function(success, login, token) {
+                if (success) {
+                    redirection('/chat-' + token);
+                }
+                else {
+                    alert("Authentification failed");
+                    $('#password').val('').focus();
+                }
+            });
+
+            function redirection(path) {
+                $(location).attr('href', path);
+            }
+        </script>
+
+    </body>
+</html>
